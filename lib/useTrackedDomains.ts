@@ -55,22 +55,31 @@ interface UseTrackedDomainsReturn {
 }
 
 export function useTrackedDomains(): UseTrackedDomainsReturn {
-  const [domains, setDomains] = useState<TrackedDomain[]>([]);
+  const [domains, setDomains] = useState<TrackedDomain[]>(() => {
+    const stored = loadState();
+    if (stored?.domains?.length) {
+      return stored.domains.map((d) => ({
+        ...d,
+        isCustom: true,
+      }));
+    }
+    return [];
+  });
   const domainsRef = useRef<TrackedDomain[]>([]);
-  const [lastGlobalRefresh, setLastGlobalRefresh] = useState<number | null>(null);
+  const [lastGlobalRefresh, setLastGlobalRefresh] = useState<number | null>(() => loadState()?.lastGlobalRefresh ?? null);
   const [search, setSearch] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('dr-desc');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [updating, setUpdating] = useState<Set<string>>(new Set());
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
 
   // Auto weekly refresh (client-side opportunistic cron for user custom sites)
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(true);
-  const [lastAutoRefresh, setLastAutoRefresh] = useState<number | null>(null);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState<boolean>(() => loadState()?.autoRefreshEnabled ?? true);
+  const [lastAutoRefresh, setLastAutoRefresh] = useState<number | null>(() => loadState()?.lastAutoRefresh ?? null);
 
   // Predictions / "I think this will be at the top" submissions (localStorage only)
-  const [predictions, setPredictions] = useState<import('./types').Prediction[]>([]);
+  const [predictions, setPredictions] = useState<import('./types').Prediction[]>(() => loadState()?.predictions || []);
 
   const toastIdRef = useRef(1);
   const autoRefreshInFlightRef = useRef(false);
@@ -89,43 +98,20 @@ export function useTrackedDomains(): UseTrackedDomainsReturn {
     setToasts((t) => t.filter((tt) => tt.id !== id));
   }, []);
 
-  // Hydrate ONLY user custom sites from localStorage.
-  // Global example sites now come from shared data/global-dr.json (updated via GitHub Action).
   useEffect(() => {
+    domainsRef.current = domains;
     const stored = loadState();
-    if (stored && stored.domains.length > 0) {
-      // Migration: treat stored as user customs
-      const migratedDomains = stored.domains.map((d) => ({
-        ...d,
-        isCustom: true, // anything persisted in local is "yours"
-      }));
-
-      setDomains(migratedDomains);
-      domainsRef.current = migratedDomains;
-      setLastGlobalRefresh(stored.lastGlobalRefresh ?? null);
-      setAutoRefreshEnabled(stored.autoRefreshEnabled ?? true);
-      setLastAutoRefresh(stored.lastAutoRefresh ?? null);
-      setPredictions((stored as any).predictions || []);
-    } else {
-      // Fresh start: no user sites yet. Globals are provided separately from shared JSON.
-      const empty: TrackedDomain[] = [];
-      setDomains(empty);
-      domainsRef.current = empty;
-      setAutoRefreshEnabled(true);
-      setLastAutoRefresh(null);
-      setPredictions([]);
-
-      const initialState: StoredState = {
+    if (!stored) {
+      saveState({
         version: 2,
-        domains: empty,
+        domains: [],
         lastGlobalRefresh: null,
         autoRefreshEnabled: true,
         lastAutoRefresh: null,
-      };
-      saveState(initialState);
+        predictions: [],
+      });
     }
-    setIsLoading(false);
-  }, [showToast]);
+  }, [domains]);
 
   // Persist with full v2 auto + predictions state
   const persist = useCallback((nextDomains: TrackedDomain[], nextLastGlobal?: number | null, nextPreds?: any) => {
@@ -148,39 +134,6 @@ export function useTrackedDomains(): UseTrackedDomainsReturn {
       return next;
     });
   }, [persist]);
-
-  const addDomain = useCallback(async (input: string) => {
-    const normalized = normalizeDomain(input);
-    if (!normalized) {
-      showToast('Please enter a valid domain (e.g. example.com)', 'error');
-      return;
-    }
-
-    // If already tracked, just refresh it and select
-    const existing = domains.find((d) => d.domain === normalized);
-    if (existing) {
-      showToast(`${normalized} is already tracked`, 'info');
-      setSelectedDomain(normalized);
-      await refreshDomain(normalized);
-      return;
-    }
-
-    // Add immediately with empty history — mark as custom so it gets weekly auto love
-    const newDomain: TrackedDomain = {
-      domain: normalized,
-      history: [],
-      lastChecked: null,
-      isCustom: true,
-    };
-
-    updateDomains((prev) => [...prev, newDomain]);
-    // domainsRef is updated inside updateDomains
-    showToast(`Added ${normalized}`, 'success');
-
-    // Immediately fetch its rating
-    await refreshDomain(normalized);
-    setSelectedDomain(normalized);
-  }, [domains, updateDomains, showToast]);
 
   const applyNewPoint = (domain: string, dr: number, fetchedAt: number) => {
     updateDomains((prev) =>
@@ -221,6 +174,39 @@ export function useTrackedDomains(): UseTrackedDomainsReturn {
     applyNewPoint(domain, result.dr, result.fetchedAt);
     // no toast on single success — too noisy for refresh all
   }, [showToast, updateDomains]);
+
+  const addDomain = useCallback(async (input: string) => {
+    const normalized = normalizeDomain(input);
+    if (!normalized) {
+      showToast('Please enter a valid domain (e.g. example.com)', 'error');
+      return;
+    }
+
+    // If already tracked, just refresh it and select
+    const existing = domains.find((d) => d.domain === normalized);
+    if (existing) {
+      showToast(`${normalized} is already tracked`, 'info');
+      setSelectedDomain(normalized);
+      await refreshDomain(normalized);
+      return;
+    }
+
+    // Add immediately with empty history — mark as custom so it gets weekly auto love
+    const newDomain: TrackedDomain = {
+      domain: normalized,
+      history: [],
+      lastChecked: null,
+      isCustom: true,
+    };
+
+    updateDomains((prev) => [...prev, newDomain]);
+    // domainsRef is updated inside updateDomains
+    showToast(`Added ${normalized}`, 'success');
+
+    // Immediately fetch its rating
+    await refreshDomain(normalized);
+    setSelectedDomain(normalized);
+  }, [domains, refreshDomain, updateDomains, showToast]);
 
   const refreshAll = useCallback(async () => {
     if (domains.length === 0) return;
