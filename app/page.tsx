@@ -151,11 +151,31 @@ export default function Drank() {
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [importing, setImporting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<'global' | 'user' | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
-  const selected = selectedDomain ? getDomainRecord(selectedDomain) : null;
+  const selected = selectedDomain
+    ? selectedSource === 'user'
+      ? getUserDomain(selectedDomain) ?? null
+      : getDomainRecord(selectedDomain) ?? null
+    : null;
+
+  const openGlobalDomain = (domain: string) => {
+    setSelectedSource('global');
+    selectDomain(domain);
+  };
+
+  const openUserDomain = (domain: string) => {
+    setSelectedSource('user');
+    selectDomain(domain);
+  };
+
+  const closeSelectedDomain = () => {
+    setSelectedSource(null);
+    selectDomain(null);
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -169,7 +189,7 @@ export default function Drank() {
         addInputRef.current?.focus();
       }
       if (e.key === 'Escape') {
-        if (selectedDomain) selectDomain(null);
+        if (selectedDomain) closeSelectedDomain();
         else if (showSettings) setShowSettings(false);
       }
       if (e.key.toLowerCase() === 's' && (e.metaKey || e.ctrlKey)) {
@@ -179,7 +199,7 @@ export default function Drank() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedDomain, showSettings, selectDomain]);
+  }, [selectedDomain, showSettings, closeSelectedDomain]);
 
   const handleAdd = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -412,7 +432,7 @@ export default function Drank() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(index * 0.01, 0.25) }}
                   whileHover={{ y: -3 }}
-                  onClick={() => selectDomain(d.domain)}
+                  onClick={() => openGlobalDomain(d.domain)}
                   className="group cursor-pointer rounded-3xl border border-white/10 bg-zinc-900/60 p-5 hover:border-white/20 hover:bg-zinc-900 transition flex flex-col"
                 >
                   <div className="flex items-start justify-between">
@@ -476,7 +496,7 @@ export default function Drank() {
               return (
                 <div
                   key={d.domain}
-                  onClick={() => selectDomain(d.domain)}
+                  onClick={() => openGlobalDomain(d.domain)}
                   className="flex items-center gap-4 px-5 py-3 hover:bg-white/5 cursor-pointer group"
                 >
                   <div className={`w-8 text-right font-mono tabular-nums ${isTop3 ? 'text-2xl font-semibold text-yellow-400' : 'text-white/60'}`}>
@@ -596,7 +616,7 @@ export default function Drank() {
             <div className="text-xs uppercase tracking-widest text-white/50 mb-2">Community Nominations (from shared JSON)</div>
             <div className="flex flex-wrap gap-2">
               {liveCommunityNoms.map((n: any) => (
-                <div key={n.domain} onClick={() => selectDomain(n.domain)} className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-3 py-1 text-xs hover:border-emerald-800 flex items-center gap-2">
+                <div key={n.domain} onClick={() => openGlobalDomain(n.domain)} className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-3 py-1 text-xs hover:border-emerald-800 flex items-center gap-2">
                   {n.domain}
                   {n.note && <span className="text-white/40">— {n.note}</span>}
                   <button onClick={(e) => { e.stopPropagation(); addPrediction(n.domain); }} className="ml-1 text-emerald-400/70 hover:text-emerald-400">+</button>
@@ -632,7 +652,7 @@ export default function Drank() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(index * 0.015, 0.2) }}
                     whileHover={{ y: -4 }}
-                    onClick={() => selectDomain(d.domain)}
+                    onClick={() => openUserDomain(d.domain)}
                     className="group cursor-pointer rounded-3xl border border-white/10 bg-zinc-900/70 p-5 hover:border-emerald-900/40 hover:bg-zinc-900 active:scale-[0.995] transition flex flex-col"
                   >
                     <div className="flex items-start justify-between">
@@ -672,7 +692,7 @@ export default function Drank() {
                       <button onClick={() => refreshDomain(d.domain)} disabled={isUpdating} className="flex-1 rounded-2xl border border-white/10 py-2 text-xs font-medium hover:bg-white/5 active:bg-white/10 disabled:opacity-50 flex items-center justify-center gap-1.5">
                         <RefreshCw className={`h-3.5 w-3.5 ${isUpdating ? 'animate-spin' : ''}`} /> REFRESH
                       </button>
-                      <button onClick={() => selectDomain(d.domain)} className="flex-1 rounded-2xl border border-white/10 py-2 text-xs font-medium hover:bg-white/5 active:bg-white/10 flex items-center justify-center gap-1.5">
+                      <button onClick={() => openUserDomain(d.domain)} className="flex-1 rounded-2xl border border-white/10 py-2 text-xs font-medium hover:bg-white/5 active:bg-white/10 flex items-center justify-center gap-1.5">
                         <BarChart3 className="h-3.5 w-3.5" /> HISTORY
                       </button>
                     </div>
@@ -701,7 +721,7 @@ export default function Drank() {
                 </div>
                 <div className="space-y-2 text-sm">
                   {gGainers.map((g) => (
-                    <div key={g.domain} onClick={() => selectDomain(g.domain)} className="flex justify-between rounded-2xl bg-white/5 px-4 py-2 cursor-pointer hover:bg-white/10">
+                    <div key={g.domain} onClick={() => openGlobalDomain(g.domain)} className="flex justify-between rounded-2xl bg-white/5 px-4 py-2 cursor-pointer hover:bg-white/10">
                       <span className="font-mono">{g.domain}</span>
                       <span className="font-medium text-emerald-400">+{g.delta}</span>
                     </div>
@@ -714,7 +734,7 @@ export default function Drank() {
                 </div>
                 <div className="space-y-2 text-sm">
                   {gLosers.map((l) => (
-                    <div key={l.domain} onClick={() => selectDomain(l.domain)} className="flex justify-between rounded-2xl bg-white/5 px-4 py-2 cursor-pointer hover:bg-white/10">
+                    <div key={l.domain} onClick={() => openGlobalDomain(l.domain)} className="flex justify-between rounded-2xl bg-white/5 px-4 py-2 cursor-pointer hover:bg-white/10">
                       <span className="font-mono">{l.domain}</span>
                       <span className="font-medium text-red-400">{l.delta}</span>
                     </div>
@@ -735,7 +755,7 @@ export default function Drank() {
       {/* ==================== DETAIL MODAL (more beautiful) ==================== */}
       <AnimatePresence>
         {selected && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={() => selectDomain(null)}>
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={closeSelectedDomain}>
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -762,7 +782,7 @@ export default function Drank() {
                       </div>
                     );
                   })()}
-                  <button onClick={() => selectDomain(null)} className="rounded-full p-2 text-white/60 hover:bg-white/10"><X className="h-5 w-5" /></button>
+                  <button onClick={closeSelectedDomain} className="rounded-full p-2 text-white/60 hover:bg-white/10"><X className="h-5 w-5" /></button>
                 </div>
               </div>
 
@@ -856,7 +876,7 @@ export default function Drank() {
                 )}
 
                 <div className="flex gap-2">
-                  <button onClick={() => selectDomain(null)} className="rounded-2xl border border-white/10 px-6 py-2 text-sm hover:bg-white/5">Close</button>
+                  <button onClick={closeSelectedDomain} className="rounded-2xl border border-white/10 px-6 py-2 text-sm hover:bg-white/5">Close</button>
                   {selected?.isCustom && (
                     <button
                       onClick={() => refreshDomain(selected.domain)}
