@@ -295,7 +295,7 @@ export default function Drank() {
             <div>
               <h1 className="text-6xl font-semibold tracking-[-3.2px] text-white">Your sites.<br />Their DR. Locally.</h1>
               <p className="mt-3 max-w-md text-xl text-zinc-400">
-                Beautiful tracking powered by the free Ahrefs Domain Rating API. Everything stays in your browser.
+                Track Domain Ratings for ~45 popular sites and your own — 100% in your browser. Free Ahrefs API, no sign-up, no server.
               </p>
             </div>
             <div className="hidden lg:block text-right text-sm text-zinc-500 max-w-[260px]">
