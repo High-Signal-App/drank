@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowUp, ArrowDown, Minus, RefreshCw, Plus, Trash2, Download, Upload, X,
   Search, BarChart3, Clock, Settings, TrendingUp, Calendar, Users, Info
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts';
+const DrHistoryChart = lazy(() =>
+  import('@/components/DrHistoryChart').then((m) => ({ default: m.DrHistoryChart })),
+);
 
 import { useTrackedDomains } from '@/lib/useTrackedDomains';
 import {
@@ -79,6 +81,18 @@ export default function Drank() {
   // Live global data state (starts from static build import, refreshed from GitHub raw on client)
   const [liveGlobalDomains, setLiveGlobalDomains] = useState<TrackedDomain[]>(GLOBAL_DOMAINS);
   const [liveCommunityNoms, setLiveCommunityNoms] = useState<any[]>(COMMUNITY_NOMINATIONS);
+  const [belowFold, setBelowFold] = useState(false);
+
+  useEffect(() => {
+    document.getElementById('drank-lcp-shell')?.remove();
+    const run = () => setBelowFold(true);
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(run, { timeout: 1200 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(run, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   // Fetch fresher shared data from raw GitHub so that weekly Action updates are visible
   // without needing a new Vercel deployment every time.
@@ -304,8 +318,12 @@ export default function Drank() {
           </div>
         </div>
 
+        {!belowFold ? (
+          <div className="min-h-[50vh] rounded-3xl border border-white/5 bg-zinc-900/20" aria-hidden />
+        ) : (
+        <>
         {/* Beautiful Bento Stats */}
-        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 content-auto" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 220px' }}>
           <div className="group rounded-3xl border border-white/10 bg-zinc-900/60 p-5 backdrop-blur">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[1px] text-zinc-500">
               <Users className="h-3.5 w-3.5" /> TOTAL TRACKED
@@ -433,9 +451,7 @@ export default function Drank() {
               return (
                 <motion.div
                   key={`global-${d.domain}`}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index * 0.01, 0.25) }}
+                  initial={false}
                   whileHover={{ y: -3 }}
                   onClick={() => openGlobalDomain(d.domain)}
                   className="group cursor-pointer rounded-3xl border border-white/10 bg-zinc-900/60 p-5 hover:border-white/20 hover:bg-zinc-900 transition flex flex-col"
@@ -653,9 +669,7 @@ export default function Drank() {
                 return (
                   <motion.div
                     key={d.domain}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(index * 0.015, 0.2) }}
+                    initial={false}
                     whileHover={{ y: -4 }}
                     onClick={() => openUserDomain(d.domain)}
                     className="group cursor-pointer rounded-3xl border border-white/10 bg-zinc-900/70 p-5 hover:border-emerald-900/40 hover:bg-zinc-900 active:scale-[0.995] transition flex flex-col"
@@ -756,6 +770,8 @@ export default function Drank() {
           <span className="text-white/25">DR data via Ahrefs free public API · </span>
           <a href="https://highsignal.app/domains" target="_blank" rel="noopener noreferrer" className="underline text-white/30 hover:text-white/50">also in highsignal.app</a>
         </div>
+        </>
+        )}
       </div>
 
       {/* ==================== DETAIL MODAL (more beautiful) ==================== */}
@@ -796,24 +812,9 @@ export default function Drank() {
                 {/* Chart */}
                 {selected.history.length >= 2 ? (
                   <div className="h-80 w-full rounded-2xl border border-white/10 bg-zinc-900/60 p-4">
-                    <ResponsiveContainer>
-                      <AreaChart data={selected.history.map(p => ({
-                        date: new Date(p.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                        DR: p.dr
-                      }))}>
-                        <defs>
-                          <linearGradient id="drGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.35}/>
-                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="2 2" stroke="#27272a" />
-                        <XAxis dataKey="date" tick={{ fill: '#52525b', fontSize: 11 }} />
-                        <YAxis domain={[0, 100]} tick={{ fill: '#52525b', fontSize: 11 }} />
-                        <Tooltip contentStyle={{ background: '#18181b', border: 'none', borderRadius: 8, color: '#e4e4e7' }} />
-                        <Area type="natural" dataKey="DR" stroke="#22c55e" strokeWidth={2.5} fill="url(#drGradient)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <Suspense fallback={<div className="h-full animate-pulse rounded-xl bg-zinc-800/40" aria-hidden />}>
+                      <DrHistoryChart history={selected.history} />
+                    </Suspense>
                   </div>
                 ) : (
                   <div className="flex h-60 items-center justify-center rounded-2xl border border-dashed border-white/10 text-center text-sm text-white/50">
