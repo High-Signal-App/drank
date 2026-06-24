@@ -13,7 +13,8 @@
     "check": "biome check .",
     "cf:build": "npm run build",
     "deploy": "npm run build && wrangler pages deploy out --project-name=drank",
-    "size": "size-limit"
+    "size": "size-limit",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",
@@ -31,8 +32,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.9",
     "size-limit": "^11.2.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
