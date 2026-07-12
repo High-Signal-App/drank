@@ -3,14 +3,14 @@
 **What:** Take a user's list of sites and, next to the historic DR they already
 see, explain **why** each site has its score and **how to raise it**.
 
-**Status:** proposed · drank · client + Next API route (Vercel)
+**Status:** shipped 2026-07-13 · browser-local cache + Cloudflare Pages Function
 
 ---
 
 ## What already exists (don't rebuild)
 - Add sites, stored in localStorage; per-site **historic DR**, sparklines,
   weekly trends, gainers/losers; JSON export. (`app/page.tsx`)
-- Server route that fetches DR from Ahrefs' free public API. (`app/api/dr/route.ts`)
+- Server route that fetches DR from Ahrefs' free public API. (`functions/api/dr.ts`)
 
 So *"takes a list of sites and shows historic DR"* is largely **done** — this
 feature adds the **advisor** layer on top.
@@ -27,28 +27,30 @@ feature adds the **advisor** layer on top.
   URL + its current DR + its trend (drank already has the history) + general
   SEO/backlink knowledge. → drank becomes a free-ai consumer (new, but aligns
   with the grid every other app uses).
-- **Keep the key server-side.** Add `app/api/advisor/route.ts` alongside the
-  existing `dr` route; it calls free-ai server-side using Vercel env
-  (`FREE_AI_BASE_URL`, gateway key). Never ship the gateway key to the browser.
+- **Keep the key server-side.** `functions/api/advisor.ts` calls free-ai from
+  Cloudflare Pages using `FREE_AI_BASE_URL` plus
+  `FREE_AI_GATEWAY_API_KEY` (or `GATEWAY_API_KEY`). The credential never
+  enters the client bundle.
 - **Cache** advice per (site, DR bucket) so revisits don't re-spend tokens —
   localStorage on the client, optional edge cache on the route.
 
 ## Acceptance criteria
-- [ ] Add/paste a list of sites → each shows historic DR (existing) + an
+- [x] Add/paste a list of sites → each shows historic DR (existing) + an
       "Explain" action.
-- [ ] "Explain" returns: a 2–3 sentence **why**, and 3–5 prioritized
+- [x] "Explain" returns: a concise **why**, explicit evidence limits, and 3–5 prioritized
       **improve** steps.
-- [ ] Advice is grounded in the site's real DR + trend, not generic boilerplate.
-- [ ] The AI call is server-side; no gateway key in the client bundle.
-- [ ] Graceful degradation: if free-ai is unreachable, still show DR + a quiet
+- [x] Advice is grounded in the site's real DR + trend and clearly labels that
+      backlink/site evidence was not inspected.
+- [x] The AI call is server-side; no gateway key in the client bundle.
+- [x] Graceful degradation: if free-ai is unreachable, still show DR + a quiet
       "couldn't generate advice" note (drank must keep working offline-first).
 
-## Open questions
-- Pure-LLM advice, or enrich with one cheap grounding signal (homepage fetch /
-  sitemap / robots presence) so the "why" isn't hand-wavy?
-- Per-site token budget — cap + cache strategy.
-- Free Ahrefs API gives DR only; is referring-domains count (paid) worth it for
-  a sharper "why", or stay free-tier?
+## Decisions
+
+- Stay on the free DR-only signal; do not imply site inspection.
+- Cap output at 900 tokens and require a strict structured response.
+- Cache the last 40 successful measurement-bucket responses in localStorage.
+- Generation is explicit; opening history never invokes AI.
 
 ## Out of scope (v1)
 Paid Ahrefs metrics, backlink-level data, automated fixes/outreach.

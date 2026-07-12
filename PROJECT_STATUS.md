@@ -1,5 +1,5 @@
 # drank — PROJECT STATUS
-Last updated: 2026-07-02
+Last updated: 2026-07-13
 
 ## Why / What
 
@@ -24,6 +24,7 @@ Last updated: 2026-07-02
 ### Internal (fleet)
 
 - **High Signal:** `/domains` lens imports global DR history + `communityNominations` from drank's shared pipeline (https://highsignal.app/domains).
+- **free-ai:** optional server-side DR Advisor generation through the existing gateway; successful advice remains browser-local.
 
 ### Stack & commands
 
@@ -44,6 +45,7 @@ Last updated: 2026-07-02
 
 ## Timeline
 
+- **2026-07-13** — Shipped DR Advisor on the current Cloudflare Pages architecture: explicit, structured explanations grounded only in observed DR/trend, browser-local caching, and fail-closed server-side gateway credentials.
 - **2026-07-02** — Added Next.js error boundaries (`app/error.tsx`, `app/global-error.tsx`); removed dead `web-vitals` dependency and unused vitals files.
 - **Weekly (Mondays ~04:00 UTC)** — GitHub Action `update-global-dr.yml` runs `scripts/update-global-dr.mjs`, commits `data/global-dr.json`.
 - **Shipped** — Global example sites (~45), nomination/prediction flow, client-opportunistic weekly personal refresh, High Signal `/domains` integration, Ahrefs proxy API.
@@ -91,6 +93,14 @@ Last updated: 2026-07-02
 
 - Cloudflare Pages Function that proxies Ahrefs free Domain Rating endpoint: https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free
 - Solves CORS; sets friendly User-Agent. Served at `/api/dr` by `wrangler pages deploy`.
+
+### DR Advisor (`functions/api/advisor.ts`, `components/DrAdvisor.tsx`)
+
+- Explicit Explain/Regenerate action in domain history; opening a domain never calls AI.
+- Uses only normalized domain, current DR, and bounded trend context.
+- Strict structured output separates measurement interpretation, evidence limits, and 3–5 prioritized general actions.
+- Gateway keys stay in the Pages Function environment; valid responses are cached only in browser localStorage.
+- Missing configuration, rate limits, provider errors, and invalid output leave normal DR tracking available.
 
 ### Key files
 

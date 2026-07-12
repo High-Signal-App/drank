@@ -37,6 +37,7 @@ import {
   computeGainersLosers,
 } from '@/lib/utils';
 import type { TrackedDomain } from '@/lib/types';
+import { DrAdvisor } from '@/components/DrAdvisor';
 
 // Shared global example sites + historical DR data (maintained via GitHub Action + JSON)
 // Static import for build-time / offline fallback
@@ -207,6 +208,33 @@ export default function Drank() {
       ? (getUserDomain(selectedDomain) ?? null)
       : (getDomainRecord(selectedDomain) ?? null)
     : null;
+  const selectedCurrentDr = selected ? getCurrentDR(selected) : null;
+  const selectedTrend = selected ? getTrend(selected) : null;
+  const selectedAdvisorRequest =
+    selected && selectedCurrentDr !== null
+      ? {
+          domain: selected.domain,
+          currentDr: selectedCurrentDr,
+          trend: {
+            direction: selectedTrend?.direction ?? ('unknown' as const),
+            delta: selectedTrend?.delta ?? null,
+            periodDays:
+              selected.history.length >= 2
+                ? Math.max(
+                    1,
+                    Math.min(
+                      365,
+                      Math.round(
+                        (selected.history[selected.history.length - 1].ts -
+                          selected.history[selected.history.length - 2].ts) /
+                          86_400_000
+                      )
+                    )
+                  )
+                : null,
+          },
+        }
+      : null;
 
   const openGlobalDomain = (domain: string) => {
     setSelectedSource('global');
@@ -345,7 +373,7 @@ export default function Drank() {
               </h1>
               <p className="mt-3 max-w-md text-xl text-zinc-400">
                 See the authority score of ~45 popular sites and your own — free Ahrefs API, no
-                sign-up, no server. Your data never leaves your device.
+                sign-up. Your personal history stays in this browser.
               </p>
             </div>
             <div className="hidden lg:block text-right text-sm text-zinc-500 max-w-[260px]">
@@ -977,8 +1005,8 @@ export default function Drank() {
             })()}
 
             <div className="mt-10 text-center text-[11px] text-white/40">
-              No account. No server. No tracking. Just your domains and their scores — stored right
-              here, in this tab.
+              No account. No personal-domain database. Your domains, history, and generated advice
+              stay in this browser.
               <br className="mb-1" />
               <span className="text-white/25">DR data via Ahrefs free public API · </span>
               <a
@@ -1006,7 +1034,7 @@ export default function Drank() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 4 }}
               transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.18 }}
-              className="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl"
+              className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
@@ -1040,7 +1068,7 @@ export default function Drank() {
                 </div>
               </div>
 
-              <div className="p-7">
+              <div className="max-h-[72vh] overflow-y-auto p-7">
                 {/* Chart */}
                 {selected.history.length >= 2 ? (
                   <div className="h-80 w-full rounded-2xl border border-white/10 bg-zinc-900/60 p-4">
@@ -1060,6 +1088,8 @@ export default function Drank() {
                     Keep refreshing this domain over time to build a full history.
                   </div>
                 )}
+
+                {selectedAdvisorRequest && <DrAdvisor request={selectedAdvisorRequest} />}
 
                 {/* History list */}
                 <div className="mt-6">
