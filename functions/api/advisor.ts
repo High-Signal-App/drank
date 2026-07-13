@@ -20,7 +20,7 @@ type GatewayResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
 
-const DEFAULT_BASE_URL = 'https://free-ai-gateway.sarthakagrawal927.workers.dev';
+const DEFAULT_BASE_URL = 'https://ai-gateway.sassmaker.com';
 const SYSTEM_PROMPT = `You are drank's conservative Domain Rating advisor.
 You receive only a domain name, its observed Ahrefs Domain Rating, and a bounded trend.
 You do not have backlink counts, referring-domain data, page content, traffic, or paid Ahrefs metrics.
