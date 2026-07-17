@@ -52,6 +52,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'drank',
+              url: 'https://domains.sassmaker.com',
+              description:
+                'A High Signal research tool for tracking domain authority entirely in your browser.',
+              applicationCategory: 'BusinessApplication',
+            }),
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <div id="drank-lcp-shell" className="bg-zinc-950 text-zinc-200" aria-hidden="true">
           <div className="mx-auto max-w-7xl px-6 pt-10 pb-6">
