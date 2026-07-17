@@ -1,5 +1,8 @@
 # drank
 
+**Product:** [domains.sassmaker.com](https://domains.sassmaker.com)
+
+
 **Track Domain Ratings of popular websites and your own — 100% in your browser.**
 
 A beautiful, private Next.js dashboard that uses Ahrefs’ free public Domain Rating API. Everything (your sites, history, settings) lives in localStorage.
