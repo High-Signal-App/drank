@@ -23,7 +23,11 @@ export const metadata: Metadata = {
   description:
     'A High Signal research tool for tracking the authority score of popular sites and your own — entirely in your browser, with no sign-up or server storage.',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
   alternates: {
     canonical: '/',
