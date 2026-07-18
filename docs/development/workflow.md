@@ -26,7 +26,7 @@ pnpm dev          # http://localhost:3000
 | `pnpm size` | size-limit on `out/` bundles |
 | `pnpm test:coverage` | Vitest with v8 coverage |
 | `pnpm deploy` | Build + `wrangler pages deploy out --project-name=drank` |
-| `pnpm docs:check` | Docs link check + Blume validate (see below) |
+| `pnpm docs:check` | Docs link check + Blume build (see below) |
 | `pnpm docs:build` | Blume build → `docs-site/dist/` |
 
 > Tests: there is no bare `pnpm test` script. Run vitest directly:
@@ -75,12 +75,12 @@ pnpm dev          # http://localhost:3000
 
 `.github/workflows/ci.yml` runs on push to `main`/`master` and on PRs:
 
-- `test` job: install, lint, build, size.
-- `deploy` job (push to `main` only): build + `wrangler pages deploy out`
-  using `CLOUDFLARE_API_TOKEN` from repo secrets.
-- `docs` job: link check + Blume build/validate (see
-  [operations/deploy](../operations/runbooks/deploy.md) and
-  [docs validation](../operations/jobs/weekly-global-dr.md) for context).
+- `test` job: install, lint, build, size (`pnpm run size`).
+- `deploy` job (push to `main` only, `needs: test`): install, build, then
+  `npx wrangler pages deploy out` using `CLOUDFLARE_API_TOKEN` from repo
+  secrets. See the [deploy runbook](../operations/runbooks/deploy.md).
+- `docs` job: `scripts/check_docs_links.py` (internal-link check) + Blume
+  build in `docs-site/` — the same gate as `pnpm docs:check`.
 
 ## Secrets
 

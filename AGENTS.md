@@ -34,7 +34,7 @@ Product: <https://domains.sassmaker.com>. Full product context:
 | `pnpm size` | size-limit on `out/` bundles |
 | `pnpm vitest run` | Run tests (no bare `pnpm test` script) |
 | `pnpm deploy` | Build + `wrangler pages deploy out --project-name=drank` |
-| `pnpm docs:check` | Docs link check + Blume validate |
+| `pnpm docs:check` | Docs link check + Blume build |
 | `pnpm docs:build` | Blume build → `docs-site/dist/` |
 
 ## Critical constraints
@@ -85,7 +85,7 @@ presentation + search layer.
    approaches** → `docs/knowledge/failed-approaches/` with the reason.
 4. **Keep pages short** (150–300 lines). Split rather than grow.
 5. **Run `pnpm docs:check` before committing doc changes.** CI runs the
-   same gate (link check + Blume validate).
+   same gate (link check + Blume build).
 6. **Do not edit generated Blume output** (`docs-site/dist/`, `docs-site/.blume/`).
    Edit the Markdown in `docs/` and rebuild.
 7. **Preserve history.** Prefer `docs/archive/<name>.md` over deletion.

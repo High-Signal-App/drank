@@ -50,4 +50,4 @@ output.
   under `knowledge/failed-approaches/` with the reason.
 - Keep pages short (150–300 lines). Split rather than grow.
 - Run `pnpm docs:check` before committing doc changes (link check + Blume
-  validate). CI runs the same gate.
+  build). CI runs the same gate.

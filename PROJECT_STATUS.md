@@ -1,5 +1,5 @@
 # drank — PROJECT STATUS
-Last updated: 2026-07-13
+Last updated: 2026-07-18
 
 ## Why / What
 
@@ -9,7 +9,7 @@ Last updated: 2026-07-13
 
 **Constraints:** Real background server crons cannot touch per-user `localStorage`. Weekly personal refresh is client-opportunistic (runs when tab is open). Ahrefs free API rate limits (~750ms between bulk refreshes).
 
-**IN scope:** Single-page dashboard (`app/page.tsx`), `/api/dr` Pages Function proxy, global JSON pipeline, High Signal integration.
+**IN scope:** Single-page dashboard (`app/page.tsx`), `/api/dr` and `/api/advisor` Pages Functions, global JSON pipeline, High Signal integration.
 
 **OUT of scope:** Production deploy (straightforward but not blocking local use), server-side personal domain storage without explicit opt-in.
 
@@ -32,14 +32,13 @@ Last updated: 2026-07-13
 
 | Command | Purpose |
 |---------|---------|
-| `npm install` | Install deps |
-| `npm run dev` | Dev server → http://localhost:3000 |
-| `npm run build` | Production build |
-| `npm run start` | Production server |
-| `npm run lint` | ESLint |
-| `npm run check` | Biome check |
+| `pnpm install` | Install deps (pnpm 10+; repo pins `pnpm@10.33.2`) |
+| `pnpm dev` | Dev server → http://localhost:3000 |
+| `pnpm build` | Production build (`next build --webpack` → `out/`) |
+| `pnpm start` | Production server (rarely used; we deploy static `out/`) |
+| `pnpm lint` / `pnpm check` | Biome check (`biome check .`; no ESLint) |
 
-**Deploy:** Cloudflare Pages — `npm run deploy` (builds then `wrangler pages deploy out --project-name=drank`); CI auto-deploys on push to `main` via `CLOUDFLARE_API_TOKEN`.
+**Deploy:** Cloudflare Pages — `pnpm deploy` (builds then `wrangler pages deploy out --project-name=drank`); CI auto-deploys on push to `main` via `CLOUDFLARE_API_TOKEN`.
 
 **Env files:** None required. No secrets.
 
@@ -105,7 +104,7 @@ Last updated: 2026-07-13
 ### Key files
 
 - `app/page.tsx` — entire UI (single page).
-- `lib/types.ts`, `lib/utils.ts` — normalize, fetch, sort, colors, seed, sparkline, persistence.
+- `lib/types.ts`, `lib/utils.tsx` — normalize, fetch, sort, colors, seed, sparkline, persistence.
 - `lib/useTrackedDomains.ts` — state + refresh logic.
 - `data/global-sites.json`, `data/global-dr.json` — shared history.
 
@@ -116,7 +115,7 @@ Last updated: 2026-07-13
 1. Move GitHub Action workflow to monorepo root `.github/workflows/` (currently under `drank/.github/workflows/update-global-dr.yml`).
 2. Optional opt-in server-side weekly cron (D1 + watch id) for always-fresh personal domains.
 3. Bulk edit or CSV import for personal domain lists (`lib/useTrackedDomains.ts`).
-4. Deploy to Cloudflare Pages (`npm run deploy` or via CI).
+4. Deploy to Cloudflare Pages (`pnpm deploy` or via CI).
 
 ### Deferred
 

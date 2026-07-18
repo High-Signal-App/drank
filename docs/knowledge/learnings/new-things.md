@@ -6,7 +6,7 @@ yourself after learning; never invent rationale.
 ## Ahrefs free API — User-Agent requirement
 - What: Free public Domain Rating endpoint that requires a `User-Agent` header or it rejects
 - Why here: TBD
-- Gotcha (from code): `functions/api/dr.ts:38` — the CF Pages Function proxies the request specifically to set `User-Agent`, since the browser `fetch()` can't set it on cross-origin requests
+- Gotcha (from code): `functions/api/dr.ts:44` — the CF Pages Function proxies the request specifically to set `User-Agent`, since the browser `fetch()` can't set it on cross-origin requests
 - Source: https://ahrefs.com/api/
 
 ## Client-side opportunistic cron

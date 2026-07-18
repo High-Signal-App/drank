@@ -47,8 +47,8 @@ Data never leaves your browser except for the actual public DR lookup.
 
 ```bash
 cd drank
-npm install     # only needed if you didn't let create-next-app finish install
-npm run dev
+pnpm install    # repo pins pnpm@10.33.2 via packageManager
+pnpm dev
 ```
 
 Open http://localhost:3000
@@ -63,7 +63,7 @@ You can import it on any other browser/device running drank.
 
 - Next.js 16 App Router + TypeScript + Tailwind v4
 - Recharts only for the big history chart in the modal (table sparklines are tiny custom SVGs)
-- One Cloudflare Pages Function (`functions/api/dr.ts`) that acts as a proxy (solves CORS + lets us set a friendly User-Agent)
+- Two Cloudflare Pages Functions: `functions/api/dr.ts` (Ahrefs proxy — solves CORS + sets a friendly User-Agent) and `functions/api/advisor.ts` (server-side DR Advisor gateway call)
 
 ## Respecting the free API
 
@@ -78,15 +78,16 @@ https://docs.ahrefs.com/en/api/reference/public/get-domain-rating-free
 ## Deploy to Cloudflare Pages
 
 This app is client-side only (localStorage, no server DB) and uses Next.js
-static export (`output: 'export'` → `out/`). The `/api/dr` proxy is served as a
-Cloudflare Pages Function (`functions/api/dr.ts`).
+static export (`output: 'export'` → `out/`). The `/api/dr` and `/api/advisor`
+endpoints are served as Cloudflare Pages Functions (`functions/api/dr.ts`,
+`functions/api/advisor.ts`).
 
 1. Push your code to GitHub (the `drank` folder can live inside a monorepo).
 2. Create a Cloudflare Pages project named `drank` (or update `wrangler.toml` /
    the `deploy` script to match your project name).
 3. Build & deploy locally:
    ```bash
-   npm run deploy    # builds then runs wrangler pages deploy out --project-name=drank
+   pnpm deploy    # builds then runs wrangler pages deploy out --project-name=drank
    ```
    Or let CI handle it — the `ci.yml` workflow deploys `out/` on push to `main`
    using `CLOUDFLARE_API_TOKEN` from repo secrets.
@@ -105,10 +106,12 @@ app/
   page.tsx            # the entire UI
 functions/
   api/dr.ts           # Cloudflare Pages Function — proxy to Ahrefs free DR endpoint
+  api/advisor.ts      # Cloudflare Pages Function — server-side DR Advisor gateway call
 lib/
   types.ts
-  utils.ts            # normalize, fetch, sort, colors, seed list, sparkline, persistence
+  utils.tsx           # normalize, fetch, sort, colors, seed list, sparkline, persistence
   useTrackedDomains.ts# all the state + refresh logic
+  dr-advisor.ts       # advisor request/advice contracts + parsing (shared client/function)
 data/
   global-sites.json
   global-dr.json      # shared history, updated by GitHub Action
