@@ -37,6 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.9",
+    "blume": "1.0.4",
     "size-limit": "^11.2.0",
     "tailwindcss": "^4",
     "typescript": "^5",
