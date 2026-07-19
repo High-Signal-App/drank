@@ -10,7 +10,14 @@ import {
   saveState,
   sortDomains,
 } from './utils';
-import type { HistoryPoint, Prediction, SortMode, StoredState, Toast, TrackedDomain } from './types';
+import type {
+  HistoryPoint,
+  Prediction,
+  SortMode,
+  StoredState,
+  Toast,
+  TrackedDomain,
+} from './types';
 import globalSitesStatic from '@/data/global-sites.json';
 
 const REFRESH_DELAY_MS = 750; // be polite to the free public endpoint

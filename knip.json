@@ -1,8 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": [
-    "functions/api/**/*.ts"
-  ],
+  "entry": ["functions/api/**/*.ts"],
   "project": ["**/*.{ts,tsx,js,jsx,mjs,cjs,mts}"],
   "ignore": [
     "**/dist/**",
